@@ -57,6 +57,6 @@ jobs:
       - name: checkout deploy repo
         uses: actions/checkout@v5
         with:
-          repository: joindevops-actions/catalogue-deploy
+          repository: nallagachu-actions/catalogue-deploy
       - name: check the files
         run: ls -l
