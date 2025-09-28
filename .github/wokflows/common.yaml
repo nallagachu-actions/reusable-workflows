@@ -24,25 +24,23 @@ jobs:
     outputs:
       appVersion: ${{ steps.package-version.outputs.version }}
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v5
 
-      - name: Check the files
+      - name: Check Files
         run: ls -l
 
-      - name: Print inputs
+      - name: Print Inputs
         run: echo "Project: ${{ inputs.project }}, Component: ${{ inputs.component }}, App Type: ${{ inputs.app_type }}"
 
-      - name: Get app version
+      - name: Get App Version
         id: package-version
-        run: |
-          version=$(jq -r '.version' package.json)
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Print app version
+      - name: Print App Version
         run: echo "App Version: ${{ steps.package-version.outputs.version }}"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
       - name: Configure AWS Credentials
@@ -52,22 +50,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Cleanup old Docker images
-        run: |
-          docker rmi 351818465616.dkr.ecr.us-east-1.amazonaws.com/${{ inputs.project }}/${{ inputs.component }}:${{ steps.package-version.outputs.version }} || true
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry: 351818465616.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Build Docker image
+      - name: Build Docker Image
         run: |
-          docker build --no-cache -t 351818465616.dkr.ecr.us-east-1.amazonaws.com/${{ inputs.project }}/${{ inputs.component }}:${{ steps.package-version.outputs.version }} .
+          docker build -t 351818465616.dkr.ecr.us-east-1.amazonaws.com/${{ inputs.project }}/${{ inputs.component }}:${{ steps.package-version.outputs.version }} .
 
-      - name: Ensure ECR repository exists
+      - name: Push Docker Image
         run: |
-          aws ecr describe-repositories --repository-names ${{ inputs.project }}/${{ inputs.component }} || \
-          aws ecr create-repository --repository-name ${{ inputs.project }}/${{ inputs.component }}
-
-      - name: Push Docker image to ECR
-        run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 351818465616.dkr.ecr.us-east-1.amazonaws.com
           docker push 351818465616.dkr.ecr.us-east-1.amazonaws.com/${{ inputs.project }}/${{ inputs.component }}:${{ steps.package-version.outputs.version }}
 
   cd:
@@ -76,12 +69,12 @@ jobs:
     env:
       appVersion: ${{ needs.ci.outputs.appVersion }}
     steps:
-      - name: Checkout deploy repo
+      - name: Checkout Deploy Repo
         uses: actions/checkout@v5
         with:
           repository: joindevops-actions/catalogue-deploy
 
-      - name: Check the files
+      - name: Check Deploy Files
         run: ls -l
 
       - name: Configure AWS Credentials
@@ -96,6 +89,6 @@ jobs:
           aws eks update-kubeconfig --region us-east-1 --name roboshop-dev
           kubectl get nodes
 
-      - name: Deploy to EKS
+      - name: Deploy to EKS with Helm
         run: |
           helm upgrade --install ${{ inputs.component }} -f values-dev.yaml --set deployment.imageVersion="$appVersion" .
