@@ -29,3 +29,7 @@ jobs:
       run: echo "version=$(jq -r '.version' package.json)" >> "$GITHUB_OUTPUT"
     - name: print app version
       run: echo ${{ steps.package-version.outputs.version }}
+      - name: install dependencies
+      run: npm install
+    - name: docker build
+      run: docker build -t 351818465616.dkr.ecr.us-east-1.amazonaws.com/${{ inputs.project }}/${{ inputs.component }}${{ steps.package-version.outputs.version }} .
