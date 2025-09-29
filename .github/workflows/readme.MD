@@ -176,8 +176,6 @@ sudo systemctl enable <runner-service-name>
 
    * Use GitHub Actions UI to track workflow jobs and logs.
 
-*Optional:* Add screenshots of workflow run or pipeline stages.
-
 ---
 
 ## 💡  Best Practices
@@ -196,11 +194,5 @@ sudo systemctl enable <runner-service-name>
 * [GitHub Actions Documentation](https://docs.github.com/en/actions)
 * [AWS EKS & Helm Deployment](https://docs.aws.amazon.com/eks/latest/userguide/helm.html)
 
-*Images and diagrams can be added for:*
-
-* Pipeline flow
-* Runner setup
-* Terraform architecture
-* Helm deployment workflow
 
 
